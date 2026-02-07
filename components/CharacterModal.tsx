@@ -148,29 +148,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({ isOpen, onClose, onSave
                 )}
               </button>
             </div>
-
-            <div className="bg-purple-600/10 border border-purple-500/30 p-6 rounded-3xl relative overflow-hidden">
-               <h3 className="text-purple-400 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span className="text-lg">✨</span> Gemini Stat Filler
-              </h3>
-              <div className="space-y-4">
-                <textarea
-                  placeholder="Describe personality or power level..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white h-24 focus:border-purple-500 outline-none transition-colors"
-                />
-                <button
-                  onClick={handleAIAction}
-                  disabled={isGenerating}
-                  className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-50 py-3 rounded-xl text-xs font-black text-white uppercase tracking-widest transition-all shadow-lg shadow-purple-900/20"
-                >
-                  {isGenerating ? 'Synthesizing...' : 'Calculate Stats'}
-                </button>
-              </div>
-            </div>
           </div>
-
           {/* Right Column: Form Fields */}
           <div className="flex-1 space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -68,7 +68,7 @@ export const generateCharacterStats = async (name: string, description: string):
 
 export const extractStatsFromImage = async (base64Image: string): Promise<Partial<NewCharacter>> => {
   // Always initialize AI client inside functions using the API_KEY env variable directly
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
   try {
     const imagePart = {
       inlineData: {
