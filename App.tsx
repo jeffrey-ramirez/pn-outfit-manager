@@ -431,8 +431,8 @@ const App: React.FC = () => {
                    
                    <div className="grid grid-cols-2 gap-4">
                       <div className="p-5 bg-slate-900/30 border border-slate-800 rounded-2xl">
-                         <div className="text-[9px] text-slate-500 font-black uppercase mb-2 tracking-widest">Region</div>
-                         <div className="text-white text-sm font-black">{selectedCharacter.chinese ? 'CHINESE' : 'GLOBAL'}</div>
+                         <div className="text-[9px] text-slate-500 font-black uppercase mb-2 tracking-widest">CHINESE</div>
+                         <div className="text-white text-sm font-black">{selectedCharacter.chinese ? 'True': 'False'}</div>
                       </div>
                       <div className="p-5 bg-slate-900/30 border border-slate-800 rounded-2xl">
                          <div className="text-[9px] text-slate-500 font-black uppercase mb-2 tracking-widest">Classification</div>

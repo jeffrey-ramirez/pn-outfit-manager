@@ -192,8 +192,7 @@ const CharacterModal: React.FC<CharacterModalProps> = ({ isOpen, onClose, onSave
                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <div className="flex-1">
-                      <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Chinese Region Variant</div>
-                      <div className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Enable for regional stat adjustments</div>
+                      <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Chinese</div>
                     </div>
                     <div className={`h-6 w-11 rounded-full p-1 transition-all ${formData.chinese ? 'bg-red-600' : 'bg-slate-700'}`}>
                       <div className={`h-4 w-4 rounded-full bg-white transition-all transform ${formData.chinese ? 'translate-x-5' : ''}`}></div>
