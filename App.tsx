@@ -230,19 +230,9 @@ const App: React.FC = () => {
 
       <header className="bg-black border-b border-slate-900 px-8 py-5 flex flex-wrap gap-6 justify-between items-center sticky top-0 z-40">
         <div className="flex items-center gap-4">
-          <div className="bg-indigo-600 p-2 rounded-lg shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          </div>
+          <img src="/pockie-ninja.jpg" alt="Pockie Ninja Logo" className="h-12 w-12 object-contain" />
           <div>
-            <h1 className="text-xl font-black text-white uppercase tracking-tight">Vault Engine</h1>
-            <div className="flex items-center gap-2 mt-1">
-               <div className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]'}`}></div>
-               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">
-                {connected ? 'Database Connected' : 'Local Persistence (Sandbox)'}
-               </p>
-            </div>
+            <h1 className="text-xl font-black text-white uppercase tracking-tight">Pockie Ninja Outfits</h1>
           </div>
         </div>
 
