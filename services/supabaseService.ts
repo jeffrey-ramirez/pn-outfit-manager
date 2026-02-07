@@ -3,9 +3,9 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Character, NewCharacter } from '../types';
 
 // Retrieve environment variables
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+console.log(supabaseUrl, supabaseAnonKey);
 let supabase: SupabaseClient | null = null;
 
 if (supabaseUrl && supabaseAnonKey) {
@@ -81,7 +81,6 @@ export const insertBulkCharacters = async (characters: NewCharacter[]): Promise<
     // Fix: Ensure proper property mapping and type safety for local character creation.
     return characters.map(c => ({
       ...c,
-      id: crypto.randomUUID(),
       created_at: new Date().toISOString()
     })) as Character[];
   }
