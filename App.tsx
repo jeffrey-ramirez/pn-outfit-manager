@@ -113,7 +113,7 @@ const App: React.FC = () => {
     if (savedChar) {
       if ('id' in char) {
         setCharacters(prev => prev.map(c => c.id === savedChar.id ? savedChar : c));
-        showNotification("Character profile updated.");
+        showNotification("Character profile updated");
       } else {
         setCharacters(prev => [savedChar, ...prev]);
         showNotification("New character entry saved.");
