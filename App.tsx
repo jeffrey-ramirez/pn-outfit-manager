@@ -23,6 +23,7 @@ const LOCAL_STORAGE_KEY = 'vault_engine_local_cache';
 const App: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterClassification, setFilterClassification] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,9 +31,15 @@ const App: React.FC = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [typeSortDirection, setTypeSortDirection] = useState<SortDirection>(null);
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const connected = isDbConnected();
+
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   // Load characters on mount
   useEffect(() => {
@@ -64,10 +71,10 @@ const App: React.FC = () => {
 
   // Save to localStorage whenever characters change (as a backup)
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !isProcessing) {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(characters));
     }
-  }, [characters, isLoading]);
+  }, [characters, isLoading, isProcessing]);
 
   const statsByClassification = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -101,71 +108,81 @@ const App: React.FC = () => {
   }, [characters, searchTerm, filterClassification, typeSortDirection]);
 
   const handleSave = async (char: Character | NewCharacter) => {
+    setIsProcessing(true);
     const savedChar = await upsertCharacter(char);
     if (savedChar) {
       if ('id' in char) {
         setCharacters(prev => prev.map(c => c.id === savedChar.id ? savedChar : c));
+        showNotification("Character profile updated.");
       } else {
         setCharacters(prev => [savedChar, ...prev]);
+        showNotification("New character entry saved.");
       }
       setIsModalOpen(false);
       setEditingCharacter(null);
     } else {
-      // If DB fails but we want to allow local-only operation
-      const localChar = {
-        ...char,
-        id: (char as Character).id || crypto.randomUUID()
-      } as Character;
-      
-      if ('id' in char) {
-        setCharacters(prev => prev.map(c => c.id === localChar.id ? localChar : c));
-      } else {
-        setCharacters(prev => [localChar, ...prev]);
-      }
-      setIsModalOpen(false);
-      setEditingCharacter(null);
+      showNotification("Failed to synchronize with database.", "error");
     }
+    setIsProcessing(false);
   };
 
   const handleBulkImport = async (newChars: NewCharacter[]) => {
-    const savedChars = await insertBulkCharacters(newChars);
-    if (savedChars.length > 0) {
-      setCharacters(prev => [...savedChars, ...prev]);
-      if (connected) {
-        alert(`Successfully synchronized ${savedChars.length} records to database.`);
+    setIsProcessing(true);
+    try {
+      const savedChars = await insertBulkCharacters(newChars);
+      if (savedChars && savedChars.length > 0) {
+        setCharacters(prev => {
+          // Prevent duplicates if importing existing names
+          const existingNames = new Set(prev.map(c => c.name.toLowerCase()));
+          const uniqueNew = savedChars.filter(c => !existingNames.has(c.name.toLowerCase()));
+          return [...uniqueNew, ...prev];
+        });
+        showNotification(`Import Complete: ${savedChars.length} records processed.`);
+      } else if (newChars.length > 0) {
+        // Local only fallback if for some reason the service returned empty but we have input
+        const localChars = newChars.map(c => ({
+          ...c,
+          id: crypto.randomUUID(),
+          created_at: new Date().toISOString()
+        })) as Character[];
+        setCharacters(prev => [...localChars, ...prev]);
+        showNotification(`Local Import: ${localChars.length} records added to cache.`);
       }
-    } else {
-      // Manual fallback if bulk insert service failed to return data
-      const localChars = newChars.map(c => ({
-        ...c,
-        id: crypto.randomUUID()
-      })) as Character[];
-      setCharacters(prev => [...localChars, ...prev]);
+    } catch (err) {
+      showNotification("Import failed. Check file format.", "error");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Permanently remove this character?")) {
+    if (confirm("Permanently remove this character from the database?")) {
+      setIsProcessing(true);
       const success = await deleteCharacterFromDb(id);
       if (success || !connected) {
         setCharacters(prev => prev.filter(c => c.id !== id));
         if (selectedCharacter?.id === id) setSelectedCharacter(null);
+        showNotification("Record deleted.");
       } else {
-        alert("Deletion failed on server.");
+        showNotification("Failed to delete record from server.", "error");
       }
+      setIsProcessing(false);
     }
   };
 
   const handleClearAll = async () => {
-    if (confirm("Wipe all characters in the current view?")) {
+    if (confirm("Wipe all characters in the current view? This action is irreversible.")) {
+      setIsProcessing(true);
       const idsToDelete = processedCharacters.map(c => c.id);
       const success = await deleteAllCharactersFromDb(idsToDelete);
       if (success || !connected) {
         setCharacters(prev => prev.filter(c => !idsToDelete.includes(c.id)));
         setSelectedCharacter(null);
+        showNotification(`Registry cleared: ${idsToDelete.length} records removed.`);
       } else {
-        alert("Batch deletion failed on server.");
+        showNotification("Batch deletion failed.", "error");
       }
+      setIsProcessing(false);
     }
   };
 
@@ -198,7 +215,7 @@ const App: React.FC = () => {
         if (importedData.length > 0) {
           await handleBulkImport(importedData);
         } else {
-          alert("Import failed: No valid records found in file.");
+          showNotification("Import failed: No valid character data detected.", "error");
         }
       }
     };
@@ -228,11 +245,48 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#050505]">
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".csv" className="hidden" />
 
+      {isProcessing && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl flex flex-col items-center gap-4 shadow-2xl">
+            <div className="h-10 w-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-400">Processing Database Operation...</p>
+          </div>
+        </div>
+      )}
+
+      {notification && (
+        <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 rounded-full shadow-2xl border flex items-center gap-3 animate-bounce
+          ${notification.type === 'success' ? 'bg-indigo-600 border-indigo-400 text-white' : 'bg-red-600 border-red-400 text-white'}`}>
+          <span className="text-sm font-bold">{notification.message}</span>
+        </div>
+      )}
+
       <header className="bg-black border-b border-slate-900 px-8 py-5 flex flex-wrap gap-6 justify-between items-center sticky top-0 z-40">
         <div className="flex items-center gap-4">
-          <img src="/pockie-ninja.jpg" alt="Pockie Ninja Logo" className="h-12 w-12 object-contain" />
+          <div className="h-14 w-14 flex items-center justify-center">
+            <img 
+              src="/pockie-ninja.jpg" 
+              alt="Pockie Ninja Logo" 
+              className="h-full w-full object-contain"
+              onError={(e) => {
+                // Fallback to local relative if absolute fails
+                if (!e.currentTarget.dataset.retried) {
+                  e.currentTarget.dataset.retried = 'true';
+                  e.currentTarget.src = "pockie-ninja.jpg";
+                } else {
+                  e.currentTarget.src = "https://placehold.co/60x60/4f46e5/ffffff?text=PN";
+                }
+              }}
+            />
+          </div>
           <div>
             <h1 className="text-xl font-black text-white uppercase tracking-tight">Pockie Ninja Outfits</h1>
+            <div className="flex items-center gap-2 mt-1">
+               <div className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]'}`}></div>
+               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">
+                {connected ? 'Database Connected' : 'Local Persistence (Sandbox)'}
+               </p>
+            </div>
           </div>
         </div>
 

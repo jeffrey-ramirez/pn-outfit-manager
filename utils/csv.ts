@@ -1,7 +1,6 @@
 
 import { Character, NewCharacter } from "../types";
 
-// These are the "standard" headers we use for export
 const CSV_HEADERS = [
   'record', 'name', 'image', 'pimage', 'type', 'release', 
   'str_init', 'agi_init', 'sta_init', 
@@ -17,8 +16,7 @@ export const exportToCSV = (data: Character[]) => {
     ...data.map(row => 
       CSV_HEADERS.map(fieldName => {
         const value = (row as any)[fieldName];
-        // Special handling for boolean chinese flag
-        if (fieldName === 'chinese') return value ? "TRUE" : "";
+        if (fieldName === 'chinese') return value ? "TRUE" : "FALSE";
         
         const formattedValue = typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value;
         return formattedValue === null || formattedValue === undefined ? "" : formattedValue;
@@ -31,7 +29,7 @@ export const exportToCSV = (data: Character[]) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `game_db_sync_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute("download", `pockie_outfits_${new Date().toISOString().split('T')[0]}.csv`);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
@@ -42,8 +40,12 @@ export const parseCSV = (text: string): NewCharacter[] => {
   const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
   if (lines.length < 2) return [];
 
-  // Normalize headers to lowercase for comparison
-  const rawHeaders = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  // Detect delimiter (comma or semicolon)
+  const firstLine = lines[0];
+  const delimiter = firstLine.includes(';') && !firstLine.includes(',') ? ';' : ',';
+
+  // Normalize headers (trim, remove quotes, lowercase)
+  const rawHeaders = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
   const results: NewCharacter[] = [];
 
   const numericFields = [
@@ -56,9 +58,11 @@ export const parseCSV = (text: string): NewCharacter[] => {
     const values: string[] = [];
     let current = '';
     let inQuotes = false;
+    
+    // Proper CSV line parsing with quote handling
     for (let char of lines[i]) {
       if (char === '"') inQuotes = !inQuotes;
-      else if (char === ',' && !inQuotes) {
+      else if (char === delimiter && !inQuotes) {
         values.push(current.trim());
         current = '';
       } else {
@@ -72,31 +76,45 @@ export const parseCSV = (text: string): NewCharacter[] => {
       let val: string = values[index]?.replace(/^"|"$/g, '') || '';
       let key = header;
       
-      // FUZZY MAPPING: Handle 'ir' vs 'in' and other potential spreadsheet typos
-      if (key.includes('str_mul')) key = 'str_mul_in';
-      else if (key.includes('agi_mul')) key = 'agi_mul_in';
-      else if (key.includes('sta_mul')) key = 'sta_mul_in';
-      else if (key.includes('str_init')) key = 'str_init';
-      else if (key.includes('agi_init')) key = 'agi_init';
-      else if (key.includes('sta_init')) key = 'sta_init';
+      // Fuzzy Mapping for headers (case-insensitive and partial matches)
+      if (key.includes('str') && key.includes('mul')) key = 'str_mul_in';
+      else if (key.includes('agi') && key.includes('mul')) key = 'agi_mul_in';
+      else if (key.includes('sta') && key.includes('mul')) key = 'sta_mul_in';
+      else if (key.includes('str') && (key.includes('init') || key.includes('base'))) key = 'str_init';
+      else if (key.includes('agi') && (key.includes('init') || key.includes('base'))) key = 'agi_init';
+      else if (key.includes('sta') && (key.includes('init') || key.includes('base'))) key = 'sta_init';
+      else if (key.includes('str') && key.includes('bmv')) key = 'bmv_str';
+      else if (key.includes('agi') && key.includes('bmv')) key = 'bmv_agi';
+      else if (key.includes('sta') && key.includes('bmv')) key = 'bmv_sta';
+      else if (key === 'character' || key === 'outfit' || key === 'name') key = 'name';
+      else if (key === 'element') key = 'release';
 
       if (numericFields.includes(key)) {
-        const parsed = parseFloat(val);
+        // Strip out non-numeric chars except decimals (e.g. "+0.65" -> "0.65")
+        const cleanVal = val.replace(/[^\d.-]/g, '');
+        const parsed = parseFloat(cleanVal);
         charObj[key] = isNaN(parsed) ? 0 : parsed;
       } else if (key === 'chinese') {
         const upper = val.toUpperCase();
-        // Capture any variation of true
         charObj[key] = upper === 'TRUE' || val === '1' || upper === 'T' || upper === 'YES';
-      } else if (key !== 'id') {
+      } else {
         charObj[key] = val;
       }
     });
     
+    // Only accept if we at least found a name
     if (charObj.name) {
-      // Safety check: ensure all core multipliers are at least 0 if missing
+      // Defaults for missing data
+      charObj.type = charObj.type || 'Orange';
+      charObj.release = charObj.release || 'Fire';
+      charObj.image = charObj.image || '';
+      charObj.pimage = charObj.pimage || '';
+      charObj.record = charObj.record || '';
+      
       numericFields.forEach(f => {
         if (typeof charObj[f] !== 'number') charObj[f] = 0;
       });
+      
       results.push(charObj as NewCharacter);
     }
   }

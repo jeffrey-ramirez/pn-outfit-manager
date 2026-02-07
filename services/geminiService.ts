@@ -21,7 +21,8 @@ const CHARACTER_SCHEMA = {
 };
 
 export const generateCharacterStats = async (name: string, description: string): Promise<Partial<NewCharacter>> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Always initialize AI client inside functions using the API_KEY env variable directly
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -66,7 +67,8 @@ export const generateCharacterStats = async (name: string, description: string):
 };
 
 export const extractStatsFromImage = async (base64Image: string): Promise<Partial<NewCharacter>> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Always initialize AI client inside functions using the API_KEY env variable directly
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const imagePart = {
       inlineData: {
@@ -104,7 +106,8 @@ export const extractStatsFromImage = async (base64Image: string): Promise<Partia
 };
 
 export const extractStatsFromMultipleImages = async (base64Images: string[]): Promise<Partial<NewCharacter>[]> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Always initialize AI client inside functions using the API_KEY env variable directly
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const parts = base64Images.map(img => ({
       inlineData: {

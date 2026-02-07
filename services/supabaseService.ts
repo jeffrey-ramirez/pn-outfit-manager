@@ -48,10 +48,11 @@ export const fetchCharacters = async (): Promise<Character[]> => {
 export const upsertCharacter = async (character: Character | NewCharacter): Promise<Character | null> => {
   if (!isDbConnected()) {
     console.warn('Database not connected. Returning local object.');
-    // If not connected, we simulate a successful save by returning the object with a temporary ID if missing
-    const result = {
+    // Fix: Simulate local database save with appropriate field generation
+    const result: Character = {
       ...character,
-      id: (character as Character).id || crypto.randomUUID(),
+      id: ('id' in character) ? character.id : crypto.randomUUID(),
+      created_at: new Date().toISOString()
     } as Character;
     return result;
   }
@@ -77,6 +78,7 @@ export const upsertCharacter = async (character: Character | NewCharacter): Prom
 export const insertBulkCharacters = async (characters: NewCharacter[]): Promise<Character[]> => {
   if (!isDbConnected()) {
     console.warn('Database not connected. Processing bulk import locally.');
+    // Fix: Ensure proper property mapping and type safety for local character creation.
     return characters.map(c => ({
       ...c,
       id: crypto.randomUUID(),

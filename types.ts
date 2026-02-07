@@ -17,6 +17,7 @@ export interface Character {
   bmv_agi: number;
   bmv_sta: number;
   chinese: string | boolean;
+  created_at?: string;
 }
 
-export type NewCharacter = Omit<Character, 'id'>;
+export type NewCharacter = Omit<Character, 'id' | 'created_at'>;
