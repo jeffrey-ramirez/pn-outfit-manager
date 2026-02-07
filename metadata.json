@@ -1,0 +1,5 @@
+{
+  "name": "Game Character Database Manager",
+  "description": "A high-performance React application for managing character statistics, featuring real-time editing, AI-powered stat generation using Gemini, and Excel/CSV export capabilities.",
+  "requestFramePermissions": []
+}
