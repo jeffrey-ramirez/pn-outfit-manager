@@ -51,12 +51,11 @@ export const upsertCharacter = async (character: Character | NewCharacter): Prom
     // Fix: Simulate local database save with appropriate field generation
     const result: Character = {
       ...character,
-      id: ('id' in character) ? character.id : crypto.randomUUID(),
       created_at: new Date().toISOString()
     } as Character;
     return result;
   }
-
+  console.log("Upserting character:", character);
   try {
     const { data, error } = await supabase!
       .from('characters')

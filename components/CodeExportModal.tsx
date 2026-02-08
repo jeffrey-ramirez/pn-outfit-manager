@@ -15,28 +15,26 @@ const CodeExportModal: React.FC<CodeExportModalProps> = ({ isOpen, onClose, char
 
   const generateCSharpCode = (chars: Character[]) => {
     // Format multiplier helper: toFixed(2) but remove trailing zero if unnecessary
-    const formatMul = (val: number) => parseFloat(val.toFixed(2)).toString();
-    console.log(formatMul(0.65)); // "0.65"
-    console.log(formatMul(1.10));
+    const formatMul = (val: number) => parseFloat(val.toFixed(2));
     const staticEntry = `new Outfit
-				{
-					id = 0,
-					record = new int[3] { 1, 2, 1 },
-					name = "Ggio Vega",
-					image = Resources.GgioVega,
-					pimage = Resources.PGgioVega,
-					type = "Grey",
-					release = "Wind",
-					str_init = 13,
-					agi_init = 22,
-					sta_init = 13,
-					str_mul_init = 0.65,
-					agi_mul_init = 1.1,
-					sta_mul_init = 0.65,
-					bmv_str = 17,
-					bmv_agi = 10,
-					bmv_sta = 14
-				},`;
+{
+    id = 0,
+    record = new int[3] { 1, 2, 1 },
+    name = "Ggio Vega",
+    image = Resources.GgioVega,
+    pimage = Resources.PGgioVega,
+    type = "Grey",
+    release = "Wind",
+    str_init = 13,
+    agi_init = 22,
+    sta_init = 13,
+    str_mul_init = 0.65,
+    agi_mul_init = 1.1,
+    sta_mul_init = 0.65,
+    bmv_str = 17,
+    bmv_agi = 10,
+    bmv_sta = 14
+},`;
 
     const generatedEntries = chars.map((char, index) => {
       const sanitizedName = char.name.replace(/\s+/g, '');
